@@ -1,0 +1,17 @@
+{
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.tabSize": 2,
+  "C_Cpp.clang_format_fallbackStyle": "Google",
+  "files.exclude": {
+    "**/*.obj": true,
+    ".sconsign.dblite": true
+  },
+  "files.associations": {
+    "*.import": "json",
+    "memory": "cpp",
+    "algorithm": "cpp",
+    "xiosbase": "cpp",
+    "xlocale": "cpp"
+  }
+}
