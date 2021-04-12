@@ -1,6 +1,7 @@
 #!python
 import os
 import subprocess
+import methods
 
 opts = Variables([], ARGUMENTS)
 
@@ -120,6 +121,8 @@ sources += [
     Glob('src/*.cpp'),
     Glob('src/gdn/sqlite/*.cpp')
 ]
+
+methods.generate_version_files()
 
 library = env.SharedLibrary(
     target=env['target_path'] + env['target_name'], source=sources)

@@ -1,12 +1,12 @@
 # Ignore the binaries
 
 # Windows specific
-*.dll
-*.exp
-*.lib
+/*.dll
+/*.exp
+/*.lib
 
 # Linux specific
-*.so
+/*.so
 
 # MacOSX specific
-*.dylib
+/*.dylib

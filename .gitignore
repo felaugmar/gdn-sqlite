@@ -6,3 +6,9 @@
 
 # Godot
 .import
+
+# generated files
+*.gen.*
+
+# Python
+*__pycache__

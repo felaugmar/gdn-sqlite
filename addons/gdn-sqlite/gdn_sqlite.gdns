@@ -3,5 +3,5 @@
 [ext_resource path="res://addons/gdn-sqlite/gdn_sqlite.gdnlib" type="GDNativeLibrary" id=1]
 
 [resource]
-class_name = "SQLiteStatement"
+class_name = "GDNSQLite"
 library = ExtResource( 1 )
