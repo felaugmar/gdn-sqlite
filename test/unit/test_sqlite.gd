@@ -1,7 +1,6 @@
 extends "res://addons/gut/test.gd"
 
 const SQLite = preload('res://addons/gdn-sqlite/sqlite.gdns')
-const SQLiteConst = preload('res://addons/gdn-sqlite/constants.gd')
 
 const EXPECTED_VERSION := '3.35.4'
 const EXPECTED_VERSION_NUMBER := 3035004
@@ -18,12 +17,19 @@ func after_all()  -> void:
   sqlite = null
 
 
+func test_constants() -> void:
+  assert_eq(sqlite.OK, 0)
+  assert_eq(sqlite.ERROR, 1)
+  assert_eq(sqlite.EMPTY, 16)
+  # ...
+
+
 func test_errstr() -> void:
   var err_msg_mapping := {
-    SQLiteConst.OK: 'not an error',
-    SQLiteConst.ERROR: 'SQL logic error',
-    SQLiteConst.INTERNAL: 'unknown error',
-    SQLiteConst.PERM: 'access permission denied',
+    sqlite.OK: 'not an error',
+    sqlite.ERROR: 'SQL logic error',
+    sqlite.INTERNAL: 'unknown error',
+    sqlite.PERM: 'access permission denied',
     # ...
   }
   

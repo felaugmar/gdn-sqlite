@@ -54,18 +54,9 @@ class SQLiteStatement : public godot::Reference {
   /// See: https://www.sqlite.org/c3ref/bind_blob.html
   int bind(int index, godot::Variant data);
 
-  /// Bind array values.
-  /// This is a helper function, easier than calling `bind(int index, Variant
-  /// data)` multiple times.
-  int bind_array(godot::Array array);
-
   /// Number Of SQL Parameters.
   /// See: https://www.sqlite.org/c3ref/bind_parameter_count.html
   int parameter_count() const;
-
-  /// Reset All Bindings On A Prepared Statement.
-  /// See: https://www.sqlite.org/c3ref/clear_bindings.html
-  int clear_bindings();
 
   /// Index Of A Parameter With A Given Name.
   /// See: https://www.sqlite.org/c3ref/bind_parameter_index.html
@@ -75,6 +66,29 @@ class SQLiteStatement : public godot::Reference {
   /// See: https://www.sqlite.org/c3ref/bind_parameter_name.html
   godot::String parameter_name(int index) const;
 
+  /// Reset All Bindings On A Prepared Statement.
+  /// See: https://www.sqlite.org/c3ref/clear_bindings.html
+  int clear_bindings();
+
+  /// Bind helper
+  //////////////////////////////
+
+  /// bind by the index returned from `parameter_index(name)`.
+  int bind_named(godot::String name, godot::Variant data);
+
+  /// Bind array values.
+  /// Binds each array element in sequence (1, 2, 3, 4, 5)
+  /// Note: using `?NNN` parameters can leave holes (1, 2, 4, 5).
+  int bind_array(godot::Array array);
+
+  /// Bind dict values.
+  /// If the key is `int`, bind by index.
+  /// If the key is `String`, bind by name.
+  /// Any other key type is ignored.
+  int bind_dict(godot::Dictionary dict);
+
+  //////////////////////////////
+
   ////////////////////////////////////////////////////////////
 
   /// Column
@@ -83,11 +97,6 @@ class SQLiteStatement : public godot::Reference {
   /// Result Values From A Query.
   /// See: https://www.sqlite.org/c3ref/column_blob.html
   godot::Variant column(int index) const;
-
-  /// Get all current columns into a `Dictionary` and returns it.
-  /// This is a helper function, easier than calling `column(int index)`
-  /// multiple times.
-  godot::Dictionary columns() const;
 
   /// Size of a BLOB or a UTF-8 TEXT result in bytes
   /// See: https://www.sqlite.org/c3ref/column_blob.html
@@ -133,6 +142,18 @@ class SQLiteStatement : public godot::Reference {
   /// Declared Datatype Of A Query Result.
   /// See: https://www.sqlite.org/c3ref/column_decltype.html
   godot::String column_decltype(int index) const;
+
+  // Column helper
+  //////////////////////////////
+
+  /// Returns current columns in an `Array`.
+  godot::Array columns_array() const;
+
+  /// Returns current columns in a `Dictionary`.
+  /// The key is the `column_name` if available, otherwise the column's index.
+  godot::Dictionary columns_dict() const;
+
+  //////////////////////////////
 
   ////////////////////////////////////////////////////////////
 

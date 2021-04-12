@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Godot.hpp>
+#include <unordered_map>
 
 namespace gdn {
 namespace sqlite {
@@ -40,6 +41,13 @@ class SQLite : public godot::Reference {
 
   /// Opens the database
   godot::Ref<SQLiteDatabase> open(godot::String path) const;
+
+  godot::Array _get_property_list() const;
+
+  godot::Variant _get(godot::String property) const;
+
+ protected:
+  static std::unordered_map<std::string, int32_t> constants_int32_t;
 };
 
 };  // namespace sqlite

@@ -1,5 +1,6 @@
 #include "gdn/sqlite/statement.hpp"
 
+#include <PoolArrays.hpp>
 #include <StreamPeerBuffer.hpp>
 
 #include "gdn/sqlite/database.hpp"
@@ -21,14 +22,16 @@ void gdn::sqlite::SQLiteStatement::_register_methods() {
   godot::register_method("get_database", &SQLiteStatement::get_database);
 
   godot::register_method("bind", &SQLiteStatement::bind);
-  godot::register_method("bind_array", &SQLiteStatement::bind_array);
   godot::register_method("parameter_count", &SQLiteStatement::parameter_count);
-  godot::register_method("clear_bindings", &SQLiteStatement::clear_bindings);
   godot::register_method("parameter_index", &SQLiteStatement::parameter_index);
   godot::register_method("parameter_name", &SQLiteStatement::parameter_name);
+  godot::register_method("clear_bindings", &SQLiteStatement::clear_bindings);
+
+  godot::register_method("bind_named", &SQLiteStatement::bind_named);
+  godot::register_method("bind_array", &SQLiteStatement::bind_array);
+  godot::register_method("bind_dict", &SQLiteStatement::bind_dict);
 
   godot::register_method("column", &SQLiteStatement::column);
-  godot::register_method("columns", &SQLiteStatement::columns);
   godot::register_method("column_bytes", &SQLiteStatement::column_bytes);
   godot::register_method("column_type", &SQLiteStatement::column_type);
   godot::register_method("column_count", &SQLiteStatement::column_count);
@@ -43,6 +46,9 @@ void gdn::sqlite::SQLiteStatement::_register_methods() {
                          &SQLiteStatement::column_origin_name);
 #endif  // #ifdef SQLITE_ENABLE_COLUMN_METADATA
   godot::register_method("column_decltype", &SQLiteStatement::column_decltype);
+
+  godot::register_method("columns_array", &SQLiteStatement::columns_array);
+  godot::register_method("columns_dict", &SQLiteStatement::columns_dict);
 
   godot::register_method("sql", &SQLiteStatement::sql);
   godot::register_method("expanded_sql", &SQLiteStatement::expanded_sql);
@@ -155,9 +161,11 @@ int gdn::sqlite::SQLiteStatement::bind(int index, godot::Variant data) {
 
       spb->put_var(data, false);
 
-      bind_result =
-          sqlite3_bind_blob64(stmt.get(), index, &spb->get_data_array().read(),
-                              spb->get_size(), SQLITE_TRANSIENT);
+      auto da = spb->get_data_array();
+      auto dar = da.read();
+
+      bind_result = sqlite3_bind_blob64(stmt.get(), index, dar.ptr(), da.size(),
+                                        SQLITE_TRANSIENT);
 
       break;
     }
@@ -166,35 +174,10 @@ int gdn::sqlite::SQLiteStatement::bind(int index, godot::Variant data) {
   return bind_result;
 }
 
-int gdn::sqlite::SQLiteStatement::bind_array(godot::Array array) {
-  ERR_FAIL_COND_V(is_finalized(), SQLITE_ERROR);
-
-  for (int i = 0; i < array.size(); i++) {
-    // Binding starts at 1 (so, `i + 1`)
-    auto err = bind(i + 1, array[i]);
-
-    if (err) {
-      ERR_PRINTS(godot::String("Failed to bind element at index {0}")
-                     .format(godot::Array::make(i)));
-
-      return err;
-    }
-  }
-
-  // Success
-  return SQLITE_OK;
-}
-
 int gdn::sqlite::SQLiteStatement::parameter_count() const {
   ERR_FAIL_COND_V(is_finalized(), 0);
 
   return sqlite3_bind_parameter_count(stmt.get());
-}
-
-int gdn::sqlite::SQLiteStatement::clear_bindings() {
-  ERR_FAIL_COND_V(is_finalized(), SQLITE_ERROR);
-
-  return sqlite3_clear_bindings(stmt.get());
 }
 
 int gdn::sqlite::SQLiteStatement::parameter_index(godot::String name) const {
@@ -207,6 +190,75 @@ godot::String gdn::sqlite::SQLiteStatement::parameter_name(int index) const {
   ERR_FAIL_COND_V(is_finalized(), "");
 
   return sqlite3_bind_parameter_name(stmt.get(), index);
+}
+
+int gdn::sqlite::SQLiteStatement::clear_bindings() {
+  ERR_FAIL_COND_V(is_finalized(), SQLITE_ERROR);
+
+  return sqlite3_clear_bindings(stmt.get());
+}
+
+int gdn::sqlite::SQLiteStatement::bind_named(godot::String name,
+                                             godot::Variant data) {
+  ERR_FAIL_COND_V(is_finalized(), SQLITE_ERROR);
+
+  return bind(parameter_index(name), data);
+}
+
+int gdn::sqlite::SQLiteStatement::bind_array(godot::Array array) {
+  ERR_FAIL_COND_V(is_finalized(), SQLITE_ERROR);
+
+  for (int i = 0; i < array.size(); i++) {
+    // Binding starts at 1 (so, `i + 1`)
+    auto err = bind(i + 1, array[i]);
+
+    if (err) {
+      WARN_PRINTS(godot::String("Failed to bind element at index {0}")
+                      .format(godot::Array::make(i)));
+
+      return err;
+    }
+  }
+
+  // Success
+  return SQLITE_OK;
+}
+
+int gdn::sqlite::SQLiteStatement::bind_dict(godot::Dictionary dict) {
+  ERR_FAIL_COND_V(is_finalized(), SQLITE_ERROR);
+
+  auto dict_keys = dict.keys();
+
+  int err;
+
+  for (auto i = 0; i < dict_keys.size(); ++i) {
+    auto key = dict_keys[i];
+    auto var = dict[key];
+
+    switch (key.get_type()) {
+      case godot::Variant::Type::INT:
+        err = bind(key, var);
+        break;
+
+      case godot::Variant::Type::STRING:
+        err = bind_named(key, var);
+        break;
+
+      default:
+        // OK, any other type is ignored
+        err = SQLITE_OK;
+        break;
+    }
+
+    if (err) {
+      WARN_PRINTS(godot::String("Failed to bind element at key {0}")
+                      .format(godot::Array::make(key)));
+
+      return err;
+    }
+  }
+
+  return SQLITE_OK;
 }
 
 godot::Variant gdn::sqlite::SQLiteStatement::column(int index) const {
@@ -228,31 +280,30 @@ godot::Variant gdn::sqlite::SQLiteStatement::column(int index) const {
     case SQLITE_BLOB: {
       // Read the BLOB into a StreamPeerBuffer,
       // try to get a variant from it and return if valid,
-      // otherwise return the buffer.
+      // otherwise return the data as PoolByteArray.
 
       auto col_bytes = column_bytes(index);
 
       if (col_bytes == 0) return {};  // empty, return NULL
 
-      godot::Ref<godot::StreamPeerBuffer> spb = godot::StreamPeerBuffer::_new();
-
       // resize and copy 🙏
+      auto data_array = godot::PoolByteArray();
+      data_array.resize(col_bytes);
 
-      spb->resize(col_bytes);
-
-      auto write = spb->get_data_array().write();
-      auto blob = sqlite3_column_blob(stmt.get(), index);
+      auto write = data_array.write();
+      auto blob = (uint8_t *)sqlite3_column_blob(stmt.get(), index);
 
       memcpy(write.ptr(), blob, col_bytes);
 
+      godot::Ref<godot::StreamPeerBuffer> spb = godot::StreamPeerBuffer::_new();
+
+      spb->put_data(data_array);
+      spb->seek(0);
+
       auto var = spb->get_var(false);
 
-      if (var.get_type() == godot::Variant::Type::NIL) {
-        // the var is null, return the StreamPeerBuffer
-        spb->seek(0);
-
-        return spb;
-      }
+      // the var is null, return the PoolByteArray
+      if (var.get_type() == godot::Variant::Type::NIL) return data_array;
 
       return var;
     }
@@ -260,29 +311,6 @@ godot::Variant gdn::sqlite::SQLiteStatement::column(int index) const {
     default:  // NULL variant as default
       return {};
   }
-}
-
-godot::Dictionary gdn::sqlite::SQLiteStatement::columns() const {
-  ERR_FAIL_COND_V(is_finalized(), {});
-  ERR_FAIL_COND_V(busy() == false,
-                  {});  // The statement must be busy to use the `column` API.
-
-  godot::Dictionary result_dir;
-
-  auto c_count = column_count();
-
-  for (int i = 0; i < c_count; i++) {
-    auto c_name = column_name(i);
-    auto c_variant = column(i);
-
-    // Use the index as the dict key if the column name is blank
-    if (c_name == "")
-      result_dir[i] = c_variant;
-    else
-      result_dir[c_name] = c_variant;
-  }
-
-  return result_dir;
 }
 
 int gdn::sqlite::SQLiteStatement::column_bytes(int index) const {
@@ -364,6 +392,39 @@ godot::String gdn::sqlite::SQLiteStatement::column_decltype(int index) const {
   if (column_decltype_data == nullptr) return "";
 
   return column_decltype_data;
+}
+
+godot::Array gdn::sqlite::SQLiteStatement::columns_array() const {
+  ERR_FAIL_COND_V(is_finalized(), {});
+  ERR_FAIL_COND_V(busy() == false,
+                  {});  // The statement must be busy to use the `column` API.
+
+  godot::Array array;
+
+  for (int i = 0; i < column_count(); i++) array.append(column(i));
+
+  return array;
+}
+
+godot::Dictionary gdn::sqlite::SQLiteStatement::columns_dict() const {
+  ERR_FAIL_COND_V(is_finalized(), {});
+  ERR_FAIL_COND_V(busy() == false,
+                  {});  // The statement must be busy to use the `column` API.
+
+  godot::Dictionary dict;
+
+  for (int i = 0; i < column_count(); i++) {
+    auto c_name = column_name(i);
+    auto c_variant = column(i);
+
+    // Use the index as the dict key if the column name is blank
+    if (c_name.empty())
+      dict[i] = c_variant;
+    else
+      dict[c_name] = c_variant;
+  }
+
+  return dict;
 }
 
 godot::String gdn::sqlite::SQLiteStatement::sql() const {

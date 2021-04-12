@@ -2,8 +2,8 @@
 
 singleton=false
 load_once=true
-symbol_prefix="godot_"
-reloadable=true
+symbol_prefix="gdn_sqlite_"
+reloadable=false
 
 [entry]
 

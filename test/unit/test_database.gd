@@ -5,6 +5,8 @@ const DB_PATH := 'user://gdn-sqlite/test_db.db3'
 const SQLite = preload('res://addons/gdn-sqlite/sqlite.gdns')
 const SQLiteDB = preload('res://addons/gdn-sqlite/database.gdns')
 
+var sqlite : SQLite
+
 
 func before_all() -> void:
   var dir := Directory.new()
@@ -34,13 +36,13 @@ func test_open_close() -> void:
 func test_errcode() -> void:
   var db := _open_db()
   
-  assert_eq(db.errcode(), 0)
+  assert_eq(db.errcode(), sqlite.OK)
 
 
 func test_extended_errcode() -> void:
   var db := _open_db()
   
-  assert_eq(db.extended_errcode(), 0)
+  assert_eq(db.extended_errcode(), sqlite.OK)
 
 
 func test_errmsg() -> void:
@@ -52,7 +54,7 @@ func test_errmsg() -> void:
 func test_system_errno() -> void:
   var db := _open_db()
   
-  assert_eq(db.system_errno(), 0)
+  assert_eq(db.system_errno(), sqlite.OK)
 
 
 func test_get_path() -> void:
@@ -68,6 +70,6 @@ func test_to_string() -> void:
 
 
 func _open_db() -> SQLiteDB:
-  var sqlite := SQLite.new()
+  sqlite = SQLite.new()
   
   return sqlite.open(DB_PATH)
