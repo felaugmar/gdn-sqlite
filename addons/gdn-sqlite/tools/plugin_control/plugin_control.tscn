@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://addons/gdn-sqlite/tools/plugin_control/plugin_control.gd" type="Script" id=1]
+[ext_resource path="res://addons/gdn-sqlite/tools/version_manager/version_manager.tscn" type="PackedScene" id=2]
+
+[node name="plugin_control" type="MarginContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+rect_min_size = Vector2( 0, 245 )
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="tab_container" type="TabContainer" parent="."]
+margin_right = 1024.0
+margin_bottom = 600.0
+tab_align = 0
+
+[node name="Version Manager" parent="tab_container" instance=ExtResource( 2 )]
+margin_left = 4.0
+margin_top = 32.0
+margin_right = -4.0
+margin_bottom = -4.0

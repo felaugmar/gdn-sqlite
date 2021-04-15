@@ -16,3 +16,8 @@ run/main_scene="res://test/test_runner.tscn"
 [editor_plugins]
 
 enabled=PoolStringArray( "res://addons/gdn-sqlite/plugin.cfg", "res://addons/gut/plugin.cfg" )
+
+[node]
+
+name_num_separator=2
+name_casing=2

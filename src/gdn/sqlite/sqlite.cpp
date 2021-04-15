@@ -3,146 +3,194 @@
 #include <sqlite3.h>
 
 #include "gdn/sqlite/database.hpp"
+#include "gdn/sqlite/godot_utils.hpp"
 
-#define CONSTANT_PAIR(Const) \
-  { #Const, SQLITE_##Const }
+#define CONSTANT(Const, Category) \
+  { #Const, SQLITE_##Const, Category }
 
-std::unordered_map<std::string, int32_t>
-    gdn::sqlite::SQLite::constants_int32_t = {
-        // Fundamental Datatypes
-        CONSTANT_PAIR(INTEGER),
-        CONSTANT_PAIR(FLOAT),
-        CONSTANT_PAIR(TEXT),
-        CONSTANT_PAIR(BLOB),
-        CONSTANT_PAIR(NULL),
+#define FD_CONSTANT(Const) CONSTANT(##Const, "Fundamental Datatypes")
 
-        // Result Codes
-        CONSTANT_PAIR(OK),
-        CONSTANT_PAIR(ERROR),
-        CONSTANT_PAIR(INTERNAL),
-        CONSTANT_PAIR(PERM),
-        CONSTANT_PAIR(ABORT),
-        CONSTANT_PAIR(BUSY),
-        CONSTANT_PAIR(LOCKED),
-        CONSTANT_PAIR(NOMEM),
-        CONSTANT_PAIR(READONLY),
-        CONSTANT_PAIR(INTERRUPT),
-        CONSTANT_PAIR(IOERR),
-        CONSTANT_PAIR(CORRUPT),
-        CONSTANT_PAIR(NOTFOUND),
-        CONSTANT_PAIR(FULL),
-        CONSTANT_PAIR(CANTOPEN),
-        CONSTANT_PAIR(PROTOCOL),
-        CONSTANT_PAIR(EMPTY),
-        CONSTANT_PAIR(SCHEMA),
-        CONSTANT_PAIR(TOOBIG),
-        CONSTANT_PAIR(CONSTRAINT),
-        CONSTANT_PAIR(MISMATCH),
-        CONSTANT_PAIR(MISUSE),
-        CONSTANT_PAIR(NOLFS),
-        CONSTANT_PAIR(AUTH),
-        CONSTANT_PAIR(FORMAT),
-        CONSTANT_PAIR(RANGE),
-        CONSTANT_PAIR(NOTADB),
-        CONSTANT_PAIR(NOTICE),
-        CONSTANT_PAIR(WARNING),
-        CONSTANT_PAIR(ROW),
-        CONSTANT_PAIR(DONE),
+#define RC_CONSTANT(Const) CONSTANT(##Const, "Result Codes")
 
-        // Extended Result Codes
-        CONSTANT_PAIR(ERROR_MISSING_COLLSEQ),
-        CONSTANT_PAIR(ERROR_RETRY),
-        CONSTANT_PAIR(ERROR_SNAPSHOT),
-        CONSTANT_PAIR(IOERR_READ),
-        CONSTANT_PAIR(IOERR_SHORT_READ),
-        CONSTANT_PAIR(IOERR_WRITE),
-        CONSTANT_PAIR(IOERR_FSYNC),
-        CONSTANT_PAIR(IOERR_DIR_FSYNC),
-        CONSTANT_PAIR(IOERR_TRUNCATE),
-        CONSTANT_PAIR(IOERR_FSTAT),
-        CONSTANT_PAIR(IOERR_UNLOCK),
-        CONSTANT_PAIR(IOERR_RDLOCK),
-        CONSTANT_PAIR(IOERR_DELETE),
-        CONSTANT_PAIR(IOERR_BLOCKED),
-        CONSTANT_PAIR(IOERR_NOMEM),
-        CONSTANT_PAIR(IOERR_ACCESS),
-        CONSTANT_PAIR(IOERR_CHECKRESERVEDLOCK),
-        CONSTANT_PAIR(IOERR_LOCK),
-        CONSTANT_PAIR(IOERR_CLOSE),
-        CONSTANT_PAIR(IOERR_DIR_CLOSE),
-        CONSTANT_PAIR(IOERR_SHMOPEN),
-        CONSTANT_PAIR(IOERR_SHMSIZE),
-        CONSTANT_PAIR(IOERR_SHMLOCK),
-        CONSTANT_PAIR(IOERR_SHMMAP),
-        CONSTANT_PAIR(IOERR_SEEK),
-        CONSTANT_PAIR(IOERR_DELETE_NOENT),
-        CONSTANT_PAIR(IOERR_MMAP),
-        CONSTANT_PAIR(IOERR_GETTEMPPATH),
-        CONSTANT_PAIR(IOERR_CONVPATH),
-        CONSTANT_PAIR(IOERR_VNODE),
-        CONSTANT_PAIR(IOERR_AUTH),
-        CONSTANT_PAIR(IOERR_BEGIN_ATOMIC),
-        CONSTANT_PAIR(IOERR_COMMIT_ATOMIC),
-        CONSTANT_PAIR(IOERR_ROLLBACK_ATOMIC),
-        CONSTANT_PAIR(IOERR_DATA),
-        CONSTANT_PAIR(IOERR_CORRUPTFS),
-        CONSTANT_PAIR(LOCKED_SHAREDCACHE),
-        CONSTANT_PAIR(LOCKED_VTAB),
-        CONSTANT_PAIR(BUSY_RECOVERY),
-        CONSTANT_PAIR(BUSY_SNAPSHOT),
-        CONSTANT_PAIR(BUSY_TIMEOUT),
-        CONSTANT_PAIR(CANTOPEN_NOTEMPDIR),
-        CONSTANT_PAIR(CANTOPEN_ISDIR),
-        CONSTANT_PAIR(CANTOPEN_FULLPATH),
-        CONSTANT_PAIR(CANTOPEN_CONVPATH),
-        CONSTANT_PAIR(CANTOPEN_DIRTYWAL),
-        CONSTANT_PAIR(CANTOPEN_SYMLINK),
-        CONSTANT_PAIR(CORRUPT_VTAB),
-        CONSTANT_PAIR(CORRUPT_SEQUENCE),
-        CONSTANT_PAIR(CORRUPT_INDEX),
-        CONSTANT_PAIR(READONLY_RECOVERY),
-        CONSTANT_PAIR(READONLY_CANTLOCK),
-        CONSTANT_PAIR(READONLY_ROLLBACK),
-        CONSTANT_PAIR(READONLY_DBMOVED),
-        CONSTANT_PAIR(READONLY_CANTINIT),
-        CONSTANT_PAIR(READONLY_DIRECTORY),
-        CONSTANT_PAIR(ABORT_ROLLBACK),
-        CONSTANT_PAIR(CONSTRAINT_CHECK),
-        CONSTANT_PAIR(CONSTRAINT_COMMITHOOK),
-        CONSTANT_PAIR(CONSTRAINT_FOREIGNKEY),
-        CONSTANT_PAIR(CONSTRAINT_FUNCTION),
-        CONSTANT_PAIR(CONSTRAINT_NOTNULL),
-        CONSTANT_PAIR(CONSTRAINT_PRIMARYKEY),
-        CONSTANT_PAIR(CONSTRAINT_TRIGGER),
-        CONSTANT_PAIR(CONSTRAINT_UNIQUE),
-        CONSTANT_PAIR(CONSTRAINT_VTAB),
-        CONSTANT_PAIR(CONSTRAINT_ROWID),
-        CONSTANT_PAIR(CONSTRAINT_PINNED),
-        CONSTANT_PAIR(NOTICE_RECOVER_WAL),
-        CONSTANT_PAIR(NOTICE_RECOVER_ROLLBACK),
-        CONSTANT_PAIR(WARNING_AUTOINDEX),
-        CONSTANT_PAIR(AUTH_USER),
-        CONSTANT_PAIR(OK_LOAD_PERMANENTLY),
-        CONSTANT_PAIR(OK_SYMLINK),
+#define ERC_CONSTANT(Const) CONSTANT(##Const, "Extended Result Codes")
 
-        // Status Parameters for prepared statements
-        CONSTANT_PAIR(STMTSTATUS_FULLSCAN_STEP),
-        CONSTANT_PAIR(STMTSTATUS_SORT),
-        CONSTANT_PAIR(STMTSTATUS_AUTOINDEX),
-        CONSTANT_PAIR(STMTSTATUS_VM_STEP),
-        CONSTANT_PAIR(STMTSTATUS_REPREPARE),
-        CONSTANT_PAIR(STMTSTATUS_RUN),
-        CONSTANT_PAIR(STMTSTATUS_MEMUSED),
+#define SPPS_CONSTANT(Const) \
+  CONSTANT(##Const, "Status Parameters for Prepared Statements")
+
+const gdn::sqlite::ConstantMapping<int32_t> gdn::sqlite::SQLite::constants_int32_t = {
+    // Fundamental Datatypes
+    FD_CONSTANT(INTEGER),
+    FD_CONSTANT(FLOAT),
+    FD_CONSTANT(TEXT),
+    FD_CONSTANT(BLOB),
+    FD_CONSTANT(NULL),
+
+    // Result Codes
+    RC_CONSTANT(OK),
+    RC_CONSTANT(ERROR),
+    RC_CONSTANT(INTERNAL),
+    RC_CONSTANT(PERM),
+    RC_CONSTANT(ABORT),
+    RC_CONSTANT(BUSY),
+    RC_CONSTANT(LOCKED),
+    RC_CONSTANT(NOMEM),
+    RC_CONSTANT(READONLY),
+    RC_CONSTANT(INTERRUPT),
+    RC_CONSTANT(IOERR),
+    RC_CONSTANT(CORRUPT),
+    RC_CONSTANT(NOTFOUND),
+    RC_CONSTANT(FULL),
+    RC_CONSTANT(CANTOPEN),
+    RC_CONSTANT(PROTOCOL),
+    RC_CONSTANT(EMPTY),
+    RC_CONSTANT(SCHEMA),
+    RC_CONSTANT(TOOBIG),
+    RC_CONSTANT(CONSTRAINT),
+    RC_CONSTANT(MISMATCH),
+    RC_CONSTANT(MISUSE),
+    RC_CONSTANT(NOLFS),
+    RC_CONSTANT(AUTH),
+    RC_CONSTANT(FORMAT),
+    RC_CONSTANT(RANGE),
+    RC_CONSTANT(NOTADB),
+    RC_CONSTANT(NOTICE),
+    RC_CONSTANT(WARNING),
+    RC_CONSTANT(ROW),
+    RC_CONSTANT(DONE),
+
+    // Extended Result Codes
+    ERC_CONSTANT(ERROR_MISSING_COLLSEQ),
+    ERC_CONSTANT(ERROR_RETRY),
+    ERC_CONSTANT(ERROR_SNAPSHOT),
+    ERC_CONSTANT(IOERR_READ),
+    ERC_CONSTANT(IOERR_SHORT_READ),
+    ERC_CONSTANT(IOERR_WRITE),
+    ERC_CONSTANT(IOERR_FSYNC),
+    ERC_CONSTANT(IOERR_DIR_FSYNC),
+    ERC_CONSTANT(IOERR_TRUNCATE),
+    ERC_CONSTANT(IOERR_FSTAT),
+    ERC_CONSTANT(IOERR_UNLOCK),
+    ERC_CONSTANT(IOERR_RDLOCK),
+    ERC_CONSTANT(IOERR_DELETE),
+    ERC_CONSTANT(IOERR_BLOCKED),
+    ERC_CONSTANT(IOERR_NOMEM),
+    ERC_CONSTANT(IOERR_ACCESS),
+    ERC_CONSTANT(IOERR_CHECKRESERVEDLOCK),
+    ERC_CONSTANT(IOERR_LOCK),
+    ERC_CONSTANT(IOERR_CLOSE),
+    ERC_CONSTANT(IOERR_DIR_CLOSE),
+    ERC_CONSTANT(IOERR_SHMOPEN),
+    ERC_CONSTANT(IOERR_SHMSIZE),
+    ERC_CONSTANT(IOERR_SHMLOCK),
+    ERC_CONSTANT(IOERR_SHMMAP),
+    ERC_CONSTANT(IOERR_SEEK),
+    ERC_CONSTANT(IOERR_DELETE_NOENT),
+    ERC_CONSTANT(IOERR_MMAP),
+    ERC_CONSTANT(IOERR_GETTEMPPATH),
+    ERC_CONSTANT(IOERR_CONVPATH),
+    ERC_CONSTANT(IOERR_VNODE),
+    ERC_CONSTANT(IOERR_AUTH),
+    ERC_CONSTANT(IOERR_BEGIN_ATOMIC),
+    ERC_CONSTANT(IOERR_COMMIT_ATOMIC),
+    ERC_CONSTANT(IOERR_ROLLBACK_ATOMIC),
+    ERC_CONSTANT(IOERR_DATA),
+    ERC_CONSTANT(IOERR_CORRUPTFS),
+    ERC_CONSTANT(LOCKED_SHAREDCACHE),
+    ERC_CONSTANT(LOCKED_VTAB),
+    ERC_CONSTANT(BUSY_RECOVERY),
+    ERC_CONSTANT(BUSY_SNAPSHOT),
+    ERC_CONSTANT(BUSY_TIMEOUT),
+    ERC_CONSTANT(CANTOPEN_NOTEMPDIR),
+    ERC_CONSTANT(CANTOPEN_ISDIR),
+    ERC_CONSTANT(CANTOPEN_FULLPATH),
+    ERC_CONSTANT(CANTOPEN_CONVPATH),
+    ERC_CONSTANT(CANTOPEN_DIRTYWAL),
+    ERC_CONSTANT(CANTOPEN_SYMLINK),
+    ERC_CONSTANT(CORRUPT_VTAB),
+    ERC_CONSTANT(CORRUPT_SEQUENCE),
+    ERC_CONSTANT(CORRUPT_INDEX),
+    ERC_CONSTANT(READONLY_RECOVERY),
+    ERC_CONSTANT(READONLY_CANTLOCK),
+    ERC_CONSTANT(READONLY_ROLLBACK),
+    ERC_CONSTANT(READONLY_DBMOVED),
+    ERC_CONSTANT(READONLY_CANTINIT),
+    ERC_CONSTANT(READONLY_DIRECTORY),
+    ERC_CONSTANT(ABORT_ROLLBACK),
+    ERC_CONSTANT(CONSTRAINT_CHECK),
+    ERC_CONSTANT(CONSTRAINT_COMMITHOOK),
+    ERC_CONSTANT(CONSTRAINT_FOREIGNKEY),
+    ERC_CONSTANT(CONSTRAINT_FUNCTION),
+    ERC_CONSTANT(CONSTRAINT_NOTNULL),
+    ERC_CONSTANT(CONSTRAINT_PRIMARYKEY),
+    ERC_CONSTANT(CONSTRAINT_TRIGGER),
+    ERC_CONSTANT(CONSTRAINT_UNIQUE),
+    ERC_CONSTANT(CONSTRAINT_VTAB),
+    ERC_CONSTANT(CONSTRAINT_ROWID),
+    ERC_CONSTANT(CONSTRAINT_PINNED),
+    ERC_CONSTANT(NOTICE_RECOVER_WAL),
+    ERC_CONSTANT(NOTICE_RECOVER_ROLLBACK),
+    ERC_CONSTANT(WARNING_AUTOINDEX),
+    ERC_CONSTANT(AUTH_USER),
+    ERC_CONSTANT(OK_LOAD_PERMANENTLY),
+    ERC_CONSTANT(OK_SYMLINK),
+
+    // Status Parameters for Prepared Statements
+    SPPS_CONSTANT(STMTSTATUS_FULLSCAN_STEP),
+    SPPS_CONSTANT(STMTSTATUS_SORT),
+    SPPS_CONSTANT(STMTSTATUS_AUTOINDEX),
+    SPPS_CONSTANT(STMTSTATUS_VM_STEP),
+    SPPS_CONSTANT(STMTSTATUS_REPREPARE),
+    SPPS_CONSTANT(STMTSTATUS_RUN),
+    SPPS_CONSTANT(STMTSTATUS_MEMUSED),
 };
 
 void gdn::sqlite::SQLite::_register_methods() {
+  register_class_documentation<SQLite>("General Functions and Constants");
+
   godot::register_method("errstr", &SQLite::errstr);
+  register_method_documentation<SQLite>(
+      "errstr",
+      "signature: errstr(result_code: int) -> String\n"
+      "order: 0\n"
+      "English-language text that describes the result code.");
+  register_method_argument_information<SQLite>(
+      "errstr", godot::Array::make(
+                    get_arg_dict("result_code", godot::Variant::Type::INT)));
 
   godot::register_method("version", &SQLite::version);
+  register_method_documentation<SQLite>(
+      "version",
+      "signature: version() -> String\n"
+      "order: 1\n"
+      "SQLite version in the format \"X.Y.Z\" where\n"
+      "X is the major version number (always 3 for SQLite3)\n"
+      "and Y is the minor version number and Z is the release number.");
+
   godot::register_method("version_number", &SQLite::version_number);
+  register_method_documentation<SQLite>(
+      "version_number",
+      "signature: version_number() -> int\n"
+      "order: 2\n"
+      "SQLite version in the format(X*1000000 + Y*1000 + Z)\n"
+      "where X, Y, and Z are the same numbers used in version().");
+
   godot::register_method("source_id", &SQLite::source_id);
+  register_method_documentation<SQLite>(
+      "source_id",
+      "signature: source_id() -> String\n"
+      "order: 3\n"
+      "Contains the date and time of the check-in (UTC)\n"
+      "and a SHA1 or SHA3-256 hash of the entire source tree.");
 
   godot::register_method("open", &SQLite::open);
+  register_method_documentation<SQLite>(
+      "open",
+      "signature: open(path: String) -> SQLiteDatabase\n"
+      "order: 4\n"
+      "Opens the database at `path`.");
+  register_method_argument_information<SQLite>(
+      "open",
+      godot::Array::make(get_arg_dict("path", godot::Variant::Type::STRING)));
 
   godot::register_method("_get_property_list", &SQLite::_get_property_list);
   godot::register_method("_get", &SQLite::_get);
@@ -180,17 +228,28 @@ godot::Ref<gdn::sqlite::SQLiteDatabase> gdn::sqlite::SQLite::open(
 godot::Array gdn::sqlite::SQLite::_get_property_list() const {
   godot::Array properties;
 
-  for (auto constant : constants_int32_t)
+  for (const auto& constant : constants_int32_t.get_constants()) {
+    std::string category;
+
+    try {
+      category = constants_int32_t.get_category(constant);
+    } catch (const std::out_of_range&) {
+    }
+
     properties.append(godot::Dictionary::make(
-        "name", constant.first.data(), "type", godot::Variant::Type::INT));
+        "name", constant.data(), "type", godot::Variant::Type::INT, "hint",
+        GODOT_PROPERTY_HINT_NONE, "hint_string",
+        "constant\n" + godot::String("category: {0}")
+                           .format(godot::Array::make(category.data()))));
+  }
 
   return properties;
 }
 
 godot::Variant gdn::sqlite::SQLite::_get(godot::String property) const {
-  auto search = constants_int32_t.find(property.ascii().get_data());
-
-  if (search != constants_int32_t.end()) return search->second;
-
-  return {};
+  try {
+    return constants_int32_t.get_value(property.ascii().get_data());
+  } catch (const std::out_of_range&) {
+    return {};
+  }
 }

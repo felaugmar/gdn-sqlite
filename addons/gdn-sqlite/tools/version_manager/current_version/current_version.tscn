@@ -1,0 +1,34 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/gdn-sqlite/tools/version_manager/current_version/current_version.gd" type="Script" id=1]
+
+[node name="current_version" type="MarginContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="v_box" type="VBoxContainer" parent="."]
+margin_right = 1024.0
+margin_bottom = 600.0
+custom_constants/separation = 0
+
+[node name="label" type="Label" parent="v_box"]
+margin_right = 1024.0
+margin_bottom = 14.0
+text = "Current Version"
+max_lines_visible = 1
+
+[node name="tree" type="Tree" parent="v_box"]
+margin_top = 14.0
+margin_right = 1024.0
+margin_bottom = 600.0
+size_flags_vertical = 3
+columns = 2
+hide_root = true
+select_mode = 1

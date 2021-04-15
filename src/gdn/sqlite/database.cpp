@@ -2,6 +2,7 @@
 
 #include <ProjectSettings.hpp>
 
+#include "gdn/sqlite/godot_utils.hpp"
 #include "gdn/sqlite/statement.hpp"
 
 void destroy_connection(sqlite3 *db) {
@@ -13,18 +14,67 @@ void destroy_connection(sqlite3 *db) {
 }
 
 void gdn::sqlite::SQLiteDatabase::_register_methods() {
+  register_class_documentation<SQLiteDatabase>("Database Connection");
+
   godot::register_method("errcode", &SQLiteDatabase::errcode);
+  register_method_documentation<SQLiteDatabase>(
+      "errcode",
+      "signature: errcode() -> int\n"
+      "order: 0\n"
+      "Current result code of this database instance.");
+
   godot::register_method("extended_errcode", &SQLiteDatabase::extended_errcode);
+  register_method_documentation<SQLiteDatabase>(
+      "extended_errcode",
+      "signature: extended_errcode() -> int\n"
+      "order: 1\n"
+      "Current extended result code of this database instance.");
+
   godot::register_method("errmsg", &SQLiteDatabase::errmsg);
+  register_method_documentation<SQLiteDatabase>(
+      "errmsg",
+      "signature: errmsg() -> String\n"
+      "order: 2\n"
+      "English-language text that describes the error.");
 
   godot::register_method("system_errno", &SQLiteDatabase::system_errno);
+  register_method_documentation<SQLiteDatabase>(
+      "system_errno",
+      "signature: system_errno() -> int\n"
+      "order: 3\n"
+      "Attempt to return the underlying operating system error code or error\n"
+      "number that caused the most recent I/O error or failure to open a "
+      "file.");
 
   godot::register_method("prepare", &SQLiteDatabase::prepare);
+  register_method_documentation<SQLiteDatabase>(
+      "prepare",
+      "signature: prepare(sql: String) -> SQLiteStatement\n"
+      "order: 4\n"
+      "Compiling An SQL Statement.");
+  register_method_argument_information<SQLiteDatabase>(
+      "prepare",
+      godot::Array::make(get_arg_dict("sql", godot::Variant::Type::STRING)));
 
   godot::register_method("close", &SQLiteDatabase::close);
+  register_method_documentation<SQLiteDatabase>("close",
+                                                "signature: close() -> void\n"
+                                                "order: 5\n"
+                                                "Closes the database.");
+
   godot::register_method("is_closed", &SQLiteDatabase::is_closed);
+  register_method_documentation<SQLiteDatabase>(
+      "is_closed",
+      "signature: is_closed() -> bool\n"
+      "order: 6\n"
+      "Whether or not the database is closed.");
 
   godot::register_method("get_path", &SQLiteDatabase::get_path);
+  register_method_documentation<SQLiteDatabase>(
+      "get_path",
+      "signature: get_path() -> String\n"
+      "order: 7\n"
+      "Database path.");
 
   godot::register_method("_to_string", &SQLiteDatabase::get_path);
 }

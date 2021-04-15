@@ -53,15 +53,17 @@ class SQLiteDatabase : public godot::Reference {
   /// See: https://www.sqlite.org/c3ref/system_errno.html
   int system_errno() const;
 
-  /// Prepare this statement with this database and SQL.
+  /// Compiling An SQL Statement.
   /// See: https://www.sqlite.org/c3ref/prepare.html
   godot::Ref<SQLiteStatement> prepare(godot::String sql);
 
-  /// Closes the database
+  /// Closes the database.
   void close();
 
+  /// Whether or not the database is closed.
   bool is_closed() const;
 
+  /// Database path.
   godot::String get_path() const;
 
  protected:

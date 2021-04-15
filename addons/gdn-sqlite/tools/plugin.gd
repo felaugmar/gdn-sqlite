@@ -5,16 +5,34 @@ extends EditorPlugin
 const GDNSQLiteLibrary = preload('res://addons/gdn-sqlite/gdn_sqlite.gdnlib')
 const GDNSQLite = preload('res://addons/gdn-sqlite/gdn_sqlite.gdns')
 
+const PluginControlScene = preload('res://addons/gdn-sqlite/tools/plugin_control/plugin_control.tscn')
+const PluginControl = preload('res://addons/gdn-sqlite/tools/plugin_control/plugin_control.gd')
 
-func _enter_tree() -> void:
+var plugin_control : PluginControl
+var tool_button : ToolButton
+
+func _enter_tree() -> void:  
   _ensure_gdns_files()
+
+   # add the plugin control
+  plugin_control = PluginControlScene.instance()
+
+  tool_button = add_control_to_bottom_panel(plugin_control, 'SQLite')
+  tool_button.hint_tooltip = "GDN SQLite"
+
+
+func _exit_tree() -> void:
+  # remove the plugin control
+  if plugin_control:
+    remove_control_from_bottom_panel(plugin_control)
+    plugin_control = null
 
 
 func _ensure_gdns_files() -> void:
-  var gdn_sqlite := GDNSQLite.new()
-  
+  var gdn_sqlite = GDNSQLite.new()
+
   var gdns_files := gdn_sqlite.gdns_files() as Array
-  
+
   for gdns_file in gdns_files:
     var gdns_filename := gdns_file['filename'] as String
     var gdns_class_name := gdns_file['class_name'] as String

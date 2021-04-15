@@ -24,7 +24,7 @@ class SQLiteStatement : public godot::Reference {
 
   void _init();
 
-  /// Evaluate An SQL Statement
+  /// Evaluate An SQL Statement.
   /// See: https://www.sqlite.org/c3ref/step.html
   int step();
 
@@ -73,7 +73,7 @@ class SQLiteStatement : public godot::Reference {
   /// Bind helper
   //////////////////////////////
 
-  /// bind by the index returned from `parameter_index(name)`.
+  /// Bind by the index returned from `parameter_index(name)`.
   int bind_named(godot::String name, godot::Variant data);
 
   /// Bind array values.
@@ -98,7 +98,7 @@ class SQLiteStatement : public godot::Reference {
   /// See: https://www.sqlite.org/c3ref/column_blob.html
   godot::Variant column(int index) const;
 
-  /// Size of a BLOB or a UTF-8 TEXT result in bytes
+  /// Size of a BLOB or a UTF-8 TEXT result in bytes.
   /// See: https://www.sqlite.org/c3ref/column_blob.html
   int column_bytes(int index) const;
 
@@ -122,18 +122,15 @@ class SQLiteStatement : public godot::Reference {
 
 #ifdef SQLITE_ENABLE_COLUMN_METADATA
 
-  /// Source Of Data In A Query Result.
-  /// Database name.
+  /// Database Name In A Query Result.
   /// See: https://www.sqlite.org/c3ref/column_database_name.html
   godot::String column_database_name(int index) const;
 
-  /// Source Of Data In A Query Result.
-  /// Table name.
+  /// Table Name In A Query Result.
   /// See: https://www.sqlite.org/c3ref/column_database_name.html
   godot::String column_table_name(int index) const;
 
-  /// Source Of Data In A Query Result.
-  /// Column name
+  /// Column Name In A Query Result.
   /// See: https://www.sqlite.org/c3ref/column_database_name.html
   godot::String column_origin_name(int index) const;
 
@@ -161,6 +158,7 @@ class SQLiteStatement : public godot::Reference {
   ////////////////////////////////////////////////////////////
 
   /// Retrieving Statement SQL.
+  /// SQL text of prepared statement.
   /// See: https://www.sqlite.org/c3ref/expanded_sql.html
   godot::String sql() const;
 
@@ -184,6 +182,7 @@ class SQLiteStatement : public godot::Reference {
   /// See: https://www.sqlite.org/c3ref/finalize.html
   void finalize();
 
+  /// Whether or not the statement is finalized.
   bool is_finalized() const;
 
  protected:
