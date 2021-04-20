@@ -24,6 +24,9 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Enable Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1.7.0
+
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
         uses: actions/setup-python@v2
@@ -41,12 +44,13 @@ jobs:
           python --version
           scons --version
 
-      - name: Compilation
-        run: |
-          cd ${{env.THIRD_PARTY_DIRNAME}}/${{env.GODOT_CPP_DIRNAME}}
-          scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} generate_bindings=yes -j${{env.JOBS}}
-          cd ../..
-          scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} -j${{env.JOBS}}
+      - name: Compile godot-cpp
+        working-directory: ${{env.THIRD_PARTY_DIRNAME}}/${{env.GODOT_CPP_DIRNAME}}
+        run: scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} generate_bindings=yes -j${{env.JOBS}}
+
+      - name: Compile gdn-sqlite
+        working-directory: .
+        run: scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} -j${{env.JOBS}}
 
       - name: Upload Binaries
         uses: svenstaro/upload-release-action@v2
