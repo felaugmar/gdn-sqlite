@@ -6,7 +6,8 @@ on:
       - "*"
 
 env:
-  BUILD_GODOT_CPP_DIR: /third_party/godot-cpp
+  THIRD_PARTY_DIRNAME: third_party
+  GODOT_CPP_DIRNAME: godot-cpp
   ADDON_BIN_DIR: ./addons/gdn-sqlite/bin
   TARGET: release
   BITS: 64
@@ -42,9 +43,9 @@ jobs:
 
       - name: Compilation
         run: |
-          cd ${{env.BUILD_GODOT_CPP_DIR}}
+          cd ${{env.THIRD_PARTY_DIRNAME}}/${{env.GODOT_CPP_DIRNAME}}
           scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} generate_bindings=yes -j${{env.JOBS}}
-          cd /
+          cd ../..
           scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} -j${{env.JOBS}}
 
       - name: Upload Binaries
