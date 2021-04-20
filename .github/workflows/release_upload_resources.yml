@@ -1,4 +1,4 @@
-name: 📁 Upload Resources
+name: 📁 Release Upload Resources
 
 on:
   push:
