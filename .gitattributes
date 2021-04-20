@@ -16,4 +16,6 @@
 /README.md                                    export-ignore
 /SConstruct                                   export-ignore
 
+/addons/gdn-sqlite/*.gdns                     export-ignore
+/addons/gdn-sqlite/*.gdnlib                   export-ignore
 /addons/gdn-sqlite/resources/loading.ase      export-ignore
