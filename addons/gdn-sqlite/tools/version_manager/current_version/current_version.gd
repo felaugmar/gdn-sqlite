@@ -2,7 +2,8 @@ tool
 
 extends MarginContainer
 
-const GDNSQLite = preload('res://addons/gdn-sqlite/gdn_sqlite.gdns')
+const AddonConstants = preload('res://addons/gdn-sqlite/tools/utils/constants.gd')
+const DirUtils = preload('res://addons/gdn-sqlite/tools/utils/directory_utils.gd')
 
 class MethodSorter:
   static func sort_by_order_ascending(a: Dictionary, b: Dictionary):
@@ -11,12 +12,28 @@ class MethodSorter:
 
 onready var _tree := $v_box/tree
 
-var _gdn_sqlite : GDNSQLite
+var _gdn_sqlite
 
-func _ready() -> void:
-  _gdn_sqlite = GDNSQLite.new()
+
+func enable() -> void:
+  _setup_gdn_sqlite()
   
   _setup_tree()
+
+
+func _setup_gdn_sqlite() -> void:
+  var GDNSQLite := load('res://addons/gdn-sqlite/tools/gdn_sqlite.gdns') as NativeScript
+  
+  var dir := Directory.new()
+  
+  if not GDNSQLite.library or not dir.file_exists(GDNSQLite.library.resource_path):
+    push_warning('Missing SQLite binaries! ' +
+                 'You can get it from the "SQLite" item in the bottom panel. ' +
+                 'Select a version in "Version Manager -> Version Updater" and press "Use this version". ' +
+                 'Network access is required.' )
+    return
+  
+  _gdn_sqlite = GDNSQLite.new()
 
 
 func _setup_tree() -> void:
@@ -31,6 +48,9 @@ func _setup_tree() -> void:
 
 
 func _setup_tree_info() -> void:
+  if not _gdn_sqlite:
+    return
+  
   var info := _tree.create_item() as TreeItem
   
   info.set_text(0, 'info')
@@ -48,6 +68,9 @@ func _setup_tree_info() -> void:
 
 
 func _setup_tree_types() -> void:
+  if not _gdn_sqlite:
+    return
+  
   var types := _tree.create_item() as TreeItem
   types.set_text(0, 'types')
   types.set_editable(0, false)
@@ -55,18 +78,14 @@ func _setup_tree_types() -> void:
   types.set_expand_right(0, true)
   types.collapsed = false
   
-  var gdns_files := _gdn_sqlite.gdns_files() as Array
+  var gdns_files := DirUtils.get_dir_files_by_regex(AddonConstants.ADDON_DIR, AddonConstants.GDNS_RE_PATTERN)
   
-  for gdns_file in gdns_files:    
+  for gdns_file in gdns_files:
     _setup_tree_type(types, gdns_file)
 
 
-func _setup_tree_type(types: TreeItem, gdns_file: Dictionary) -> void:
-  var gdns_filename := gdns_file['filename'] as String
-    
-  var gdns_path := 'res://addons/gdn-sqlite/%s' % gdns_filename
-  
-  var gdns := ResourceLoader.load(gdns_path) as NativeScript
+func _setup_tree_type(types: TreeItem, gdns_file: String) -> void:
+  var gdns := ResourceLoader.load(gdns_file, 'NativeScript') as NativeScript
   
   var type := _tree.create_item(types) as TreeItem
   type.set_text(0, '%s (%s)' % [gdns.get_class_name(), gdns.resource_path])

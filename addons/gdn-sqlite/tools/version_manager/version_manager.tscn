@@ -1,11 +1,13 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://addons/gdn-sqlite/tools/version_manager/current_version/current_version.tscn" type="PackedScene" id=1]
 [ext_resource path="res://addons/gdn-sqlite/tools/version_manager/version_updater/version_updater.tscn" type="PackedScene" id=2]
+[ext_resource path="res://addons/gdn-sqlite/tools/version_manager/version_manager.gd" type="Script" id=3]
 
 [node name="version_manager" type="PanelContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+script = ExtResource( 3 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -13,18 +15,18 @@ __meta__ = {
 [node name="h_split" type="HSplitContainer" parent="."]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 1139.0
+margin_right = 1017.0
 margin_bottom = 593.0
 
 [node name="current_version" parent="h_split" instance=ExtResource( 1 )]
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_right = 560.0
+margin_right = 499.0
 margin_bottom = 586.0
 
 [node name="version_updater" parent="h_split" instance=ExtResource( 2 )]
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_left = 572.0
-margin_right = 1132.0
+margin_left = 511.0
+margin_right = 1010.0
 margin_bottom = 586.0

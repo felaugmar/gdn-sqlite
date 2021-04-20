@@ -22,11 +22,6 @@ class GDNSQLite : public godot::Reference {
   godot::String plugin_description() const;
   godot::String plugin_author() const;
   godot::String plugin_version() const;
-
-  godot::Array gdns_files() const;
-
-  godot::Dictionary _get_gdns_dict(godot::String filename,
-                                   godot::String class_name) const;
 };
 
 };  // namespace sqlite

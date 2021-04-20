@@ -1,4 +1,68 @@
-[gd_scene format=2]
+[gd_scene load_steps=12 format=2]
+
+[ext_resource path="res://addons/gdn-sqlite/tools/version_manager/version_updater/version_updater.gd" type="Script" id=1]
+[ext_resource path="res://addons/gdn-sqlite/resources/loading.png" type="Texture" id=2]
+
+[sub_resource type="StyleBoxFlat" id=1]
+content_margin_left = 2.0
+content_margin_right = 2.0
+content_margin_top = 2.0
+content_margin_bottom = 2.0
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0, 0, 0, 1 )
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+corner_detail = 4
+
+[sub_resource type="AtlasTexture" id=2]
+atlas = ExtResource( 2 )
+region = Rect2( 0, 0, 22, 22 )
+
+[sub_resource type="AtlasTexture" id=3]
+atlas = ExtResource( 2 )
+region = Rect2( 0, 0, 22, 22 )
+
+[sub_resource type="AtlasTexture" id=4]
+atlas = ExtResource( 2 )
+region = Rect2( 22, 0, 22, 22 )
+
+[sub_resource type="AtlasTexture" id=5]
+atlas = ExtResource( 2 )
+region = Rect2( 44, 0, 22, 22 )
+
+[sub_resource type="AtlasTexture" id=6]
+atlas = ExtResource( 2 )
+region = Rect2( 66, 0, 22, 22 )
+
+[sub_resource type="AtlasTexture" id=7]
+atlas = ExtResource( 2 )
+region = Rect2( 88, 0, 22, 22 )
+
+[sub_resource type="AtlasTexture" id=8]
+atlas = ExtResource( 2 )
+region = Rect2( 110, 0, 22, 22 )
+
+[sub_resource type="Animation" id=9]
+length = 0.6
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:icon")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ SubResource( 3 ), SubResource( 4 ), SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ) ]
+}
 
 [node name="version_updater" type="MarginContainer"]
 anchor_right = 1.0
@@ -6,6 +70,99 @@ anchor_bottom = 1.0
 mouse_filter = 1
 size_flags_horizontal = 3
 size_flags_vertical = 3
+script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="v_box" type="VBoxContainer" parent="."]
+margin_right = 1024.0
+margin_bottom = 600.0
+custom_constants/separation = 0
+
+[node name="label" type="Label" parent="v_box"]
+margin_right = 1024.0
+margin_bottom = 14.0
+text = "Version Updater"
+
+[node name="v_box" type="VBoxContainer" parent="v_box"]
+margin_top = 14.0
+margin_right = 1024.0
+margin_bottom = 600.0
+size_flags_vertical = 3
+
+[node name="h_box" type="HBoxContainer" parent="v_box/v_box"]
+margin_right = 1024.0
+margin_bottom = 26.0
+
+[node name="update" type="Button" parent="v_box/v_box/h_box"]
+margin_right = 26.0
+margin_bottom = 26.0
+hint_tooltip = "Update"
+custom_styles/hover = SubResource( 1 )
+custom_styles/pressed = SubResource( 1 )
+custom_styles/focus = SubResource( 1 )
+custom_styles/disabled = SubResource( 1 )
+custom_styles/normal = SubResource( 1 )
+icon = SubResource( 2 )
+
+[node name="animation_player" type="AnimationPlayer" parent="v_box/v_box/h_box/update"]
+playback_speed = 3.0
+anims/spin = SubResource( 9 )
+
+[node name="git_releases" type="OptionButton" parent="v_box/v_box/h_box"]
+margin_left = 30.0
+margin_right = 770.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+
+[node name="use_this_version" type="Button" parent="v_box/v_box/h_box"]
+margin_left = 774.0
+margin_right = 890.0
+margin_bottom = 26.0
+hint_tooltip = "Mark to use the selected version.
+The editor may need to be restarted to take effect.
+Missing assets will be downloaded."
+text = "Use this version"
+
+[node name="force_download" type="CheckBox" parent="v_box/v_box/h_box"]
+margin_left = 894.0
+margin_right = 1024.0
+margin_bottom = 26.0
+hint_tooltip = "Forces assets to be downloaded, even if it has already been done."
+text = "Force Download"
+align = 1
+
+[node name="restart_to_take_effect" type="Label" parent="v_box/v_box"]
+visible = false
+margin_top = 30.0
+margin_right = 1024.0
+margin_bottom = 44.0
+text = "The editor must be restarted to take effect"
+align = 1
+valign = 1
+
+[node name="download_progress_bar" type="ProgressBar" parent="v_box/v_box"]
+visible = false
+margin_top = 30.0
+margin_right = 1024.0
+margin_bottom = 44.0
+
+[node name="git_release_tree" type="Tree" parent="v_box/v_box"]
+margin_top = 30.0
+margin_right = 1024.0
+margin_bottom = 586.0
+size_flags_vertical = 3
+columns = 2
+hide_root = true
+select_mode = 1
+
+[node name="git_releases_http_request" type="HTTPRequest" parent="."]
+
+[node name="asset_downloader_http_request" type="HTTPRequest" parent="."]
+
+[connection signal="pressed" from="v_box/v_box/h_box/update" to="." method="_on_update_pressed"]
+[connection signal="item_selected" from="v_box/v_box/h_box/git_releases" to="." method="_on_git_releases_item_selected"]
+[connection signal="pressed" from="v_box/v_box/h_box/use_this_version" to="." method="_on_use_this_version_pressed"]
+[connection signal="request_completed" from="git_releases_http_request" to="." method="_on_git_releases_request_completed"]
+[connection signal="request_completed" from="asset_downloader_http_request" to="." method="_on_asset_downloader_request_completed"]

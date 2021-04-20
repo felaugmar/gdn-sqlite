@@ -2,23 +2,26 @@ tool
 
 extends EditorPlugin
 
-const GDNSQLiteLibrary = preload('res://addons/gdn-sqlite/gdn_sqlite.gdnlib')
-const GDNSQLite = preload('res://addons/gdn-sqlite/gdn_sqlite.gdns')
+const AddonConstants = preload('res://addons/gdn-sqlite/tools/utils/constants.gd')
+const DirUtils = preload('res://addons/gdn-sqlite/tools/utils/directory_utils.gd')
 
-const PluginControlScene = preload('res://addons/gdn-sqlite/tools/plugin_control/plugin_control.tscn')
-const PluginControl = preload('res://addons/gdn-sqlite/tools/plugin_control/plugin_control.gd')
+var PluginControlScene : PackedScene
 
-var plugin_control : PluginControl
+var plugin_control : Control
 var tool_button : ToolButton
 
-func _enter_tree() -> void:  
-  _ensure_gdns_files()
+func _enter_tree() -> void:
+  _make_current()
+  
+  PluginControlScene = load('res://addons/gdn-sqlite/tools/plugin_control/plugin_control.tscn')
 
    # add the plugin control
   plugin_control = PluginControlScene.instance()
 
   tool_button = add_control_to_bottom_panel(plugin_control, 'SQLite')
   tool_button.hint_tooltip = "GDN SQLite"
+
+  plugin_control.enable()
 
 
 func _exit_tree() -> void:
@@ -28,38 +31,108 @@ func _exit_tree() -> void:
     plugin_control = null
 
 
-func _ensure_gdns_files() -> void:
-  var gdn_sqlite = GDNSQLite.new()
+func _make_current() -> void:  
+  var dir := Directory.new()
+  
+  if not dir.file_exists(AddonConstants.MAKE_CURRENT_FILE):
+    return
 
-  var gdns_files := gdn_sqlite.gdns_files() as Array
+  var file := File.new()
 
-  for gdns_file in gdns_files:
-    var gdns_filename := gdns_file['filename'] as String
-    var gdns_class_name := gdns_file['class_name'] as String
+  var err := file.open(AddonConstants.MAKE_CURRENT_FILE, File.READ)
+  assert(err == OK)
 
-    var gdns_path := 'res://addons/gdn-sqlite/%s' % str(gdns_filename)
+  var release := file.get_line().strip_escapes().strip_edges()
 
-    var gdns : NativeScript
+  file.close()
 
-    if ResourceLoader.exists(gdns_path):
-      gdns = ResourceLoader.load(gdns_path) as NativeScript
-    else:
-      gdns = NativeScript.new()
+  if not dir.dir_exists(AddonConstants.get_release_dir(release)):
+    return
+  
+  # remove current version files
+  _remove_old_binaries()
+  _remove_gdnlib_gdns()
+  
+  # copy files from the release
+  _copy_release_gdnlib_gdns(release)
+  _copy_release_binaries(release)
+  
+  get_editor_interface().get_resource_filesystem().scan()
+  
+  # remove .make_current
+  if dir.file_exists(AddonConstants.MAKE_CURRENT_FILE):
+    err = dir.remove(AddonConstants.MAKE_CURRENT_FILE)
+    assert(err == OK)
 
-    var need_to_save := false
 
-    if gdns.get_class_name() != gdns_class_name:
-      gdns.set_class_name(gdns_class_name)
+func _remove_old_binaries() -> void:
+  var dir := Directory.new()
+  
+  for gdnlib in DirUtils.get_dir_files_by_regex(AddonConstants.ADDON_DIR, 
+                                                AddonConstants.GDNLIB_RE_PATTERN):
+    assert(dir.file_exists(gdnlib))
+    
+    var library := ResourceLoader.load(gdnlib, 'GDNativeLibrary', true) as GDNativeLibrary
+    
+    for property_dict in library.get_property_list():
+      var property_name := property_dict['name'] as String
 
-      need_to_save = true
+      if not property_name.begins_with('entry/'):
+        continue
+      
+      var binary_filepath := library.get(property_name) as String
+      
+      if dir.file_exists(binary_filepath):
+        var err := dir.remove(binary_filepath)
+        assert(err == OK)
 
-    if gdns.get_library() != GDNSQLiteLibrary:
-      gdns.set_library(GDNSQLiteLibrary)
 
-      need_to_save = true
+func _remove_gdnlib_gdns() -> void:
+  var dir := Directory.new()
+  
+  for gdnlib_gdns in DirUtils.get_dir_files_by_regex(AddonConstants.ADDON_DIR, 
+                                                     AddonConstants.GDNLIB_GDNS_RE_PATTERN):
+    assert(dir.file_exists(gdnlib_gdns))
+    
+    var err := dir.remove(gdnlib_gdns)
+    assert(err == OK)
 
-    if need_to_save:
-      var err := ResourceSaver.save(gdns_path, gdns)
+
+func _copy_release_gdnlib_gdns(release: String) -> void:
+  var dir := Directory.new()
+  
+  for gdnlib_gdns in DirUtils.get_dir_files_by_regex(AddonConstants.get_release_assets_dir(release), 
+                                                     AddonConstants.GDNLIB_GDNS_RE_PATTERN):
+    assert(dir.file_exists(gdnlib_gdns))
+    
+    var err := dir.copy(gdnlib_gdns, AddonConstants.ADDON_DIR.plus_file(gdnlib_gdns.get_file()))
+    assert(err == OK)
+
+
+func _copy_release_binaries(release: String) -> void:
+  var dir := Directory.new()
+  
+  for gdnlib in DirUtils.get_dir_files_by_regex(AddonConstants.ADDON_DIR, 
+                                                AddonConstants.GDNLIB_RE_PATTERN):
+    assert(dir.file_exists(gdnlib))
+    
+    var library := ResourceLoader.load(gdnlib, 'GDNativeLibrary', true) as GDNativeLibrary
+    
+    for property_dict in library.get_property_list():
+      var property_name := property_dict['name'] as String
+
+      if not property_name.begins_with('entry/'):
+        continue
+
+      var binary_filepath := library.get(property_name) as String
+      var binary_filename := binary_filepath.get_file()
+      
+      var asset_filepath := AddonConstants.get_asset_filepath(release, binary_filename)
+
+      if not dir.file_exists(asset_filepath):
+        continue
+
+      var err := dir.copy(asset_filepath, binary_filepath)
       assert(err == OK)
 
 
