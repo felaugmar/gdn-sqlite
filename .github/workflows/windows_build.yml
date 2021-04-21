@@ -1,0 +1,56 @@
+name: 🏁 Windows Build
+
+on: [push, pull_request]
+
+env:
+  THIRD_PARTY_DIRNAME: third_party
+  GODOT_CPP_DIRNAME: godot-cpp
+  ADDON_BIN_DIR: ./addons/gdn-sqlite/bin
+  TARGET: debug
+  BITS: 64
+  JOBS: 4
+
+jobs:
+  windows-build:
+    name: Windows Build
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Enable Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1.7.0
+
+      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: 3.x
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: x64
+
+      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons pywin32
+          python --version
+          scons --version
+
+      - name: Compile godot-cpp
+        working-directory: ${{env.THIRD_PARTY_DIRNAME}}/${{env.GODOT_CPP_DIRNAME}}
+        run: scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} generate_bindings=yes -j${{env.JOBS}}
+
+      - name: Compile gdn-sqlite
+        working-directory: .
+        run: scons platform=windows target=${{env.TARGET}} bits=${{env.BITS}} -j${{env.JOBS}}
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{github.job}}
+          path: ${{env.ADDON_BIN_DIR}}/*
+          retention-days: 14
