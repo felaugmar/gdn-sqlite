@@ -1,10 +1,6 @@
 name: 🍎 macOS Build
 
-on:
-  push:
-    tags-ignore:
-      - "*"
-  pull_request:
+on: [push, pull_request]
 
 env:
   THIRD_PARTY_DIRNAME: third_party
