@@ -9,7 +9,7 @@ env:
   THIRD_PARTY_DIRNAME: third_party
   GODOT_CPP_DIRNAME: godot-cpp
   ADDON_BIN_DIR: ./addons/gdn-sqlite/bin
-  TARGET: release
+  TARGET: debug
   BITS: 64
   JOBS: 4
 
