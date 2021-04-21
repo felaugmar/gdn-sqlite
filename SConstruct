@@ -80,12 +80,12 @@ elif env['platform'] == "windows":
     # that way you can run scons in a vs 2017 prompt and it will find all the required tools
     env.Append(ENV=os.environ)
 
-    env.Append(CCFLAGS=['-DWIN32', '-D_WIN32', '-D_WINDOWS',
-               '-W3', '-GR', '-D_CRT_SECURE_NO_WARNINGS'])
+    env.Append(LINKFLAGS=['/WX'])
+
     if env['target'] in ('debug', 'd'):
-        env.Append(CCFLAGS=['-EHsc', '-D_DEBUG', '-MDd'])
+        env.Append(CCFLAGS=['/Z7', '/Od', '/EHsc', '/D_DEBUG', '/MDd'])
     else:
-        env.Append(CCFLAGS=['-O2', '-EHsc', '-DNDEBUG', '-MD'])
+        env.Append(CCFLAGS=['/O2', '/EHsc', '/DNDEBUG', '/MD'])
 
 if env['target'] in ('debug', 'd'):
     cpp_library += '.debug'
