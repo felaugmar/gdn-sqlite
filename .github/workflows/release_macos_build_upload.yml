@@ -1,0 +1,59 @@
+name: 🍎 Release macOS Build and Upload
+
+on:
+  push:
+    tags:
+      - "*"
+
+env:
+  THIRD_PARTY_DIRNAME: third_party
+  GODOT_CPP_DIRNAME: godot-cpp
+  ADDON_BIN_DIR: ./addons/gdn-sqlite/bin
+  TARGET: release
+  BITS: 64
+  JOBS: 4
+
+jobs:
+  macos-build-upload:
+    name: macOS Build and Upload
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: 3.x
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: x64
+
+      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Compile godot-cpp
+        working-directory: ${{env.THIRD_PARTY_DIRNAME}}/${{env.GODOT_CPP_DIRNAME}}
+        run: scons platform=osx target=${{env.TARGET}} bits=${{env.BITS}} generate_bindings=yes -j${{env.JOBS}}
+
+      - name: Compile gdn-sqlite
+        working-directory: .
+        run: scons platform=osx target=${{env.TARGET}} bits=${{env.BITS}} -j${{env.JOBS}}
+
+      - name: Upload Binaries
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: ${{env.ADDON_BIN_DIR}}/*.dylib
+          tag: ${{ github.ref }}
+          overwrite: true
