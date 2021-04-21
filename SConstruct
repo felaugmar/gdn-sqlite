@@ -52,12 +52,19 @@ if env['platform'] == "osx":
     cpp_library += '.osx'
     env['target_name'] += '.osx'
 
-    env.Append(CCFLAGS=['-g', '-arch', 'x86_64'])
+    env.Append(CCFLAGS=['-arch', 'x86_64'])
     env.Append(CXXFLAGS=['-std=c++14'])
-    env.Append(LINKFLAGS=['-arch', 'x86_64'])
+
+    env.Append(LINKFLAGS=[
+        '-arch',
+        'x86_64',
+        '-framework',
+        'Cocoa',
+        '-Wl,-undefined,dynamic_lookup',
+    ])
 
     if env['target'] in ('debug', 'd'):
-        env.Append(CCFLAGS=['-O2'])
+        env.Append(CCFLAGS=['-Og', '-g'])
     else:
         env.Append(CCFLAGS=['-O3'])
 
@@ -65,13 +72,22 @@ elif env['platform'] in ('x11', 'linux'):
     cpp_library += '.linux'
     env['target_name'] += '.linux'
 
-    env.Append(CCFLAGS=['-fPIC'])
+    env.Append(CCFLAGS=['-fPIC', '-Wwrite-strings'])
     env.Append(CXXFLAGS=['-std=c++14'])
 
+    env.Append(LINKFLAGS=["-Wl,-R,'$$ORIGIN'"])
+
     if env['target'] in ('debug', 'd'):
-        env.Append(CCFLAGS=['-g3', '-Og'])
+        env.Append(CCFLAGS=['-Og', '-g'])
     else:
-        env.Append(CCFLAGS=['-g', '-O3'])
+        env.Append(CCFLAGS=['-O3'])
+
+    if bits == 64:
+        env.Append(CCFLAGS=['-m64'])
+        env.Append(LINKFLAGS=['-m64'])
+    elif bits == 32:
+        env.Append(CCFLAGS=['-m32'])
+        env.Append(LINKFLAGS=['-m32'])
 
 elif env['platform'] == "windows":
     cpp_library += '.windows'
