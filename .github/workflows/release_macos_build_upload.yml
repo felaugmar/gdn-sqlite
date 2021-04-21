@@ -1,9 +1,9 @@
 name: 🍎 Release macOS Build and Upload
 
 on:
-  push:
-    tags:
-      - "*"
+  release:
+    types:
+      - created
 
 env:
   THIRD_PARTY_DIRNAME: third_party
