@@ -8,7 +8,7 @@ reloadable=false
 [entry]
 
 Windows.64="res://addons/gdn-sqlite/bin/libgdn-sqlite.windows.64.dll"
-OSX.64="res://addons/gdn-sqlite/bin/libgdn-sqlite.64.dylib"
+OSX.64="res://addons/gdn-sqlite/bin/libgdn-sqlite.osx.64.dylib"
 X11.64="res://addons/gdn-sqlite/bin/libgdn-sqlite.linux.64.so"
 
 [dependencies]
