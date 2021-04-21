@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 
 #include <Godot.hpp>
+#include <memory>
 
 void finalize_stmt(sqlite3_stmt *stmt);
 

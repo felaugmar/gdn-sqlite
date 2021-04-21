@@ -508,11 +508,11 @@ godot::Variant gdn::sqlite::SQLiteStatement::column(int index) const {
 
   switch (col_type) {
     case SQLITE_INTEGER:
-      return {(int64_t)sqlite3_column_int64(stmt.get(), index)};
+      return (int64_t)sqlite3_column_int64(stmt.get(), index);
     case SQLITE_FLOAT:
-      return {sqlite3_column_double(stmt.get(), index)};
+      return sqlite3_column_double(stmt.get(), index);
     case SQLITE3_TEXT:
-      return {(const char *)sqlite3_column_text(stmt.get(), index)};
+      return (const char *)sqlite3_column_text(stmt.get(), index);
     case SQLITE_BLOB: {
       // Read the BLOB into a StreamPeerBuffer,
       // try to get a variant from it and return if valid,
