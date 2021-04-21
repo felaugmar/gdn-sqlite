@@ -8,14 +8,14 @@
 #define CONSTANT(Const, Category) \
   { #Const, SQLITE_##Const, Category }
 
-#define FD_CONSTANT(Const) CONSTANT(##Const, "Fundamental Datatypes")
+#define FD_CONSTANT(Const) CONSTANT(Const, "Fundamental Datatypes")
 
-#define RC_CONSTANT(Const) CONSTANT(##Const, "Result Codes")
+#define RC_CONSTANT(Const) CONSTANT(Const, "Result Codes")
 
-#define ERC_CONSTANT(Const) CONSTANT(##Const, "Extended Result Codes")
+#define ERC_CONSTANT(Const) CONSTANT(Const, "Extended Result Codes")
 
 #define SPPS_CONSTANT(Const) \
-  CONSTANT(##Const, "Status Parameters for Prepared Statements")
+  CONSTANT(Const, "Status Parameters for Prepared Statements")
 
 const gdn::sqlite::ConstantMapping<int32_t> gdn::sqlite::SQLite::constants_int32_t = {
     // Fundamental Datatypes
@@ -23,7 +23,7 @@ const gdn::sqlite::ConstantMapping<int32_t> gdn::sqlite::SQLite::constants_int32
     FD_CONSTANT(FLOAT),
     FD_CONSTANT(TEXT),
     FD_CONSTANT(BLOB),
-    FD_CONSTANT(NULL),
+    CONSTANT(NULL, "Fundamental Datatypes"),
 
     // Result Codes
     RC_CONSTANT(OK),
