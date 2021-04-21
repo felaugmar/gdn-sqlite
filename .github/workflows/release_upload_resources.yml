@@ -1,9 +1,9 @@
 name: 📁 Release Upload Resources
 
 on:
-  push:
-    tags:
-      - "*"
+  release:
+    types:
+      - created
 
 env:
   ADDON_DIR: ./addons/gdn-sqlite
