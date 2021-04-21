@@ -1,6 +1,10 @@
 name: 🐧 Linux Build
 
-on: [push, pull_request]
+on:
+  push:
+    tags-ignore:
+      - "*"
+  pull_request:
 
 env:
   THIRD_PARTY_DIRNAME: third_party
