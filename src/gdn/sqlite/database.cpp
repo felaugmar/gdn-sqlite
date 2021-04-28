@@ -56,24 +56,46 @@ void gdn::sqlite::SQLiteDatabase::_register_methods() {
       "prepare",
       godot::Array::make(get_arg_dict("sql", godot::Variant::Type::STRING)));
 
+  godot::register_method("last_insert_rowid",
+                         &SQLiteDatabase::last_insert_rowid);
+  register_method_documentation<SQLiteDatabase>(
+      "last_insert_rowid",
+      "signature: last_insert_rowid() -> int\n"
+      "order: 5\n"
+      "Returns the rowid of the most recent successful INSERT\n"
+      "into a rowid table or virtual table.");
+
+  godot::register_method("set_last_insert_rowid",
+                         &SQLiteDatabase::set_last_insert_rowid);
+  register_method_documentation<SQLiteDatabase>(
+      "set_last_insert_rowid",
+      "signature: set_last_insert_rowid(last_insert_rowid: int) -> void\n"
+      "order: 6\n"
+      "Set the value returned by calling `last_insert_rowid()`\n"
+      "without inserting a row into the database.");
+  register_method_argument_information<SQLiteDatabase>(
+      "set_last_insert_rowid",
+      godot::Array::make(
+          get_arg_dict("last_insert_rowid", godot::Variant::Type::INT)));
+
   godot::register_method("close", &SQLiteDatabase::close);
   register_method_documentation<SQLiteDatabase>("close",
                                                 "signature: close() -> void\n"
-                                                "order: 5\n"
+                                                "order: 7\n"
                                                 "Closes the database.");
 
   godot::register_method("is_closed", &SQLiteDatabase::is_closed);
   register_method_documentation<SQLiteDatabase>(
       "is_closed",
       "signature: is_closed() -> bool\n"
-      "order: 6\n"
+      "order: 8\n"
       "Whether or not the database is closed.");
 
   godot::register_method("get_path", &SQLiteDatabase::get_path);
   register_method_documentation<SQLiteDatabase>(
       "get_path",
       "signature: get_path() -> String\n"
-      "order: 7\n"
+      "order: 9\n"
       "Database path.");
 
   godot::register_method("_to_string", &SQLiteDatabase::get_path);
@@ -145,6 +167,19 @@ godot::Ref<gdn::sqlite::SQLiteStatement> gdn::sqlite::SQLiteDatabase::prepare(
   if (err) return {};
 
   return stmt;
+}
+
+int64_t gdn::sqlite::SQLiteDatabase::last_insert_rowid() const {
+  ERR_FAIL_COND_V(is_closed(), 0);
+
+  return sqlite3_last_insert_rowid(connection.get());
+}
+
+void gdn::sqlite::SQLiteDatabase::set_last_insert_rowid(
+    int64_t last_insert_rowid) {
+  ERR_FAIL_COND(is_closed());
+
+  sqlite3_set_last_insert_rowid(connection.get(), last_insert_rowid);
 }
 
 void gdn::sqlite::SQLiteDatabase::close() {

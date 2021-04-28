@@ -57,6 +57,18 @@ class SQLiteDatabase : public godot::Reference {
   /// See: https://www.sqlite.org/c3ref/prepare.html
   godot::Ref<SQLiteStatement> prepare(godot::String sql);
 
+  /// Last Insert Rowid
+  /// Returns the rowid of the most recent successful INSERT
+  /// into a rowid table or virtual table.
+  /// See: https://www.sqlite.org/c3ref/last_insert_rowid.html
+  int64_t last_insert_rowid() const;
+
+  /// Set the Last Insert Rowid value
+  /// Set the value returned by calling `last_insert_rowid()`
+  /// without inserting a row into the database.
+  /// See: https://www.sqlite.org/c3ref/set_last_insert_rowid.html
+  void set_last_insert_rowid(int64_t last_insert_rowid);
+
   /// Closes the database.
   void close();
 

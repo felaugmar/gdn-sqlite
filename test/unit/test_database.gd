@@ -57,6 +57,43 @@ func test_system_errno() -> void:
   assert_eq(db.system_errno(), sqlite.OK)
 
 
+func test_last_insert_rowid() -> void:
+  var db := _open_db()
+  
+  assert_eq(db.last_insert_rowid(), 0)
+  
+  var create := 'CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);'
+  var insert := "INSERT INTO test (name) VALUES ('hehe');"
+  var insert_with_id := "INSERT INTO test (id, name) VALUES (5, 'haha');"
+  var drop := 'DROP TABLE test;'
+  
+  var err = db.prepare(create).step()
+  assert(err == sqlite.DONE)
+  
+  # test auto incremented rowid
+  err = db.prepare(insert).step()
+  assert(err == sqlite.DONE)
+  
+  assert_eq(db.last_insert_rowid(), 1)
+  
+  # test defined rowid
+  err = db.prepare(insert_with_id).step()
+  assert(err == sqlite.DONE)
+  
+  assert_eq(db.last_insert_rowid(), 5)
+  
+  err = db.prepare(drop).step()
+  assert(err == sqlite.DONE)
+
+
+func test_set_last_insert_rowid() -> void:
+  var db := _open_db()
+  
+  db.set_last_insert_rowid(2)
+  
+  assert_eq(db.last_insert_rowid(), 2)
+
+
 func test_get_path() -> void:
   var db := _open_db()
   
