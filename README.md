@@ -51,3 +51,5 @@ assert(err == sqlite.ROW)
 
 assert(stmt.columns_array() == [1])
 ```
+
+You can find all classes and members in the [**Current Version**](#see-the-image-below-for-reference-where-you-can-find-the-version-updater) interface after the binaries are downloaded.
