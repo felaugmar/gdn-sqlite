@@ -14,7 +14,7 @@ void destroy_connection(sqlite3 *db) {
 }
 
 void update_callback(void *udp, int type, const char *db_name,
-                     const char *tbl_name, sqlite3_int64 rowid) {
+                     const char *tbl_name, int64_t rowid) {
   auto sqlite_db = *(godot::Ref<gdn::sqlite::SQLiteDatabase> *)&udp;
 
   sqlite_db->emit_signal("updated", type, db_name, tbl_name, rowid);
