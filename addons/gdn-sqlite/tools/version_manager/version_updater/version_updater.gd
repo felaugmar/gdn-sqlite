@@ -44,6 +44,11 @@ var _total_downloaded_bytes := 0
 signal _finished_downloading_assets()
 
 
+func _ready() -> void:
+  _release_tree.set_column_expand(0, false)
+  _release_tree.set_column_min_width(0, 250)
+
+
 func enable() -> void:
   set_process(false)
   

@@ -5,7 +5,10 @@ extends MarginContainer
 const AddonConstants = preload('res://addons/gdn-sqlite/tools/utils/constants.gd')
 const DirUtils = preload('res://addons/gdn-sqlite/tools/utils/directory_utils.gd')
 
-class MethodSorter:
+const DOC_SIGNATURE_MARKER := 'signature:'
+const DOC_ORDER_MARKER := 'order:'
+
+class Sorter:
   static func sort_by_order_ascending(a: Dictionary, b: Dictionary):
     return a.get('order', 0) < b.get('order', 0)
 
@@ -104,6 +107,9 @@ func _setup_tree_type(types: TreeItem, gdns_file: String) -> void:
   
   # type constants
   _setup_tree_type_constants(type, gdns)
+  
+  # type signals
+  _setup_tree_type_signals(type, gdns)
 
 
 func _setup_tree_type_methods(type: TreeItem, gdns: NativeScript) -> void:
@@ -112,7 +118,7 @@ func _setup_tree_type_methods(type: TreeItem, gdns: NativeScript) -> void:
   if methods.empty():
     return
   
-  methods.sort_custom(MethodSorter, 'sort_by_order_ascending')
+  methods.sort_custom(Sorter, 'sort_by_order_ascending')
   
   var type_methods := _tree.create_item(type) as TreeItem
   type_methods.set_text(0, 'methods')
@@ -147,29 +153,13 @@ func _get_tree_type_methods(type: TreeItem, gdns: NativeScript) -> Array:
     if method_name.begins_with('_') or method_name == 'free':
       continue
     
-    var md := gdns.get_method_documentation(method_name) as String
-    var md_lines := md.split('\n')
-    
-    var signature_marker := 'signature:'
-    var order_marker := 'order:'
-    
-    var signature := ''
-    var order := 0
-    var documentation := ''
-    
-    for md_line in md_lines:
-      if md_line.begins_with(signature_marker):
-        signature = md_line.substr(signature_marker.length()).strip_edges()
-      elif md_line.begins_with(order_marker):
-        order = int(md_line.substr(order_marker.length()).strip_edges())
-      else:
-        documentation += '%s\n' % md_line
+    var doc_info := _get_doc_info(gdns.get_method_documentation(method_name))
     
     methods.push_back({
       'name': method_name,
-      'signature': signature,
-      'order': order,
-      'documentation': documentation
+      'signature': doc_info['signature'],
+      'order': doc_info['order'],
+      'documentation': doc_info['documentation']
     })
   
   return methods
@@ -241,3 +231,77 @@ func _get_tree_type_constants(type: TreeItem, gdns: NativeScript) -> Array:
     })
   
   return constants
+
+
+func _setup_tree_type_signals(type: TreeItem, gdns: NativeScript) -> void:
+  var signals := _get_tree_type_signals(type, gdns)
+  
+  if signals.empty():
+    return
+  
+  signals.sort_custom(Sorter, 'sort_by_order_ascending')
+  
+  var type_signals := _tree.create_item(type) as TreeItem
+  type_signals.set_text(0, 'signals')
+  type_signals.set_editable(0, false)
+  type_signals.set_selectable(0, false)
+  type_signals.set_expand_right(0, true)
+  type_signals.collapsed = true
+  
+  for sig in signals:
+    var signature := sig['signature'] as String
+    var documentation := sig['documentation'] as String
+    
+    var type_signal := _tree.create_item(type_signals) as TreeItem
+    type_signal.set_text(0, sig['name'] if signature.empty() else signature)
+    type_signal.set_text(1, documentation.replace('\n', ' ').strip_escapes())
+    type_signal.set_tooltip(1, documentation)
+
+
+func _get_tree_type_signals(type: TreeItem, gdns: NativeScript) -> Array:
+  var type_dummy = gdns.new()
+  
+  var signals := []
+  
+  for type_signal_dict in type_dummy.get_signal_list():
+    var signal_name := type_signal_dict['name'] as String
+    
+    # skip Reference signals
+    if ClassDB.class_has_signal('Reference', signal_name):
+      continue
+    
+    if signal_name.begins_with('_'):
+      continue
+    
+    var doc_info := _get_doc_info(gdns.get_signal_documentation(signal_name))
+    
+    signals.push_back({
+      'name': signal_name,
+      'signature': doc_info['signature'],
+      'order': doc_info['order'],
+      'documentation': doc_info['documentation']
+    })
+  
+  return signals
+
+
+func _get_doc_info(doc: String) -> Dictionary:
+  var doc_lines := doc.split('\n')    
+  
+  var signature := ''
+  var order := 0
+  var documentation := ''
+  
+  for doc_line in doc_lines:
+    if doc_line.begins_with(DOC_SIGNATURE_MARKER):
+      signature = doc_line.substr(DOC_SIGNATURE_MARKER.length()).strip_edges()
+    elif doc_line.begins_with(DOC_ORDER_MARKER):
+      order = int(doc_line.substr(DOC_ORDER_MARKER.length()).strip_edges())
+    else:
+      documentation += '%s\n' % doc_line
+  
+  return {
+    'signature': signature,
+    'order': order,
+    'documentation': documentation
+  }

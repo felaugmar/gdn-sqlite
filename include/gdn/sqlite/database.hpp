@@ -5,7 +5,9 @@
 #include <Godot.hpp>
 #include <memory>
 
-void destroy_connection(sqlite3 *connection);
+void destroy_connection(sqlite3* connection);
+void update_callback(void* udp, int type, const char* db_name,
+                     const char* tbl_name, sqlite3_int64 rowid);
 
 namespace gdn {
 namespace sqlite {
@@ -78,6 +80,13 @@ class SQLiteDatabase : public godot::Reference {
   /// Database path.
   godot::String get_path() const;
 
+  /// Enables or disables the signal `updated`.
+  /// The signal `updated` is called for every rowid update.
+  void set_updated(bool enable);
+
+  /// Whether or not the signal `updated` is enabled.
+  bool is_updated_enabled() const;
+
  protected:
   friend class SQLite;
   friend class SQLiteStatement;
@@ -86,6 +95,8 @@ class SQLiteDatabase : public godot::Reference {
   int open(godot::String path);
 
   godot::String path;
+
+  bool updated_enabled = false;
 
  protected:
   connection_ptr connection;

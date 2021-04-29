@@ -13,6 +13,13 @@ void destroy_connection(sqlite3 *db) {
                godot::String(sqlite3_errstr(err)));
 }
 
+void update_callback(void *udp, int type, const char *db_name,
+                     const char *tbl_name, sqlite3_int64 rowid) {
+  auto sqlite_db = *(godot::Ref<gdn::sqlite::SQLiteDatabase> *)&udp;
+
+  sqlite_db->emit_signal("updated", type, db_name, tbl_name, rowid);
+}
+
 void gdn::sqlite::SQLiteDatabase::_register_methods() {
   register_class_documentation<SQLiteDatabase>("Database Connection");
 
@@ -98,7 +105,38 @@ void gdn::sqlite::SQLiteDatabase::_register_methods() {
       "order: 9\n"
       "Database path.");
 
+  godot::register_method("set_updated", &SQLiteDatabase::set_updated);
+  register_method_documentation<SQLiteDatabase>(
+      "set_updated",
+      "signature: set_updated(enable: bool) -> void\n"
+      "order: 10\n"
+      "Enables or disables the signal `updated`.");
+  register_method_argument_information<SQLiteDatabase>(
+      "set_updated",
+      godot::Array::make(get_arg_dict("enable", godot::Variant::Type::BOOL)));
+
+  godot::register_method("is_updated_enabled",
+                         &SQLiteDatabase::is_updated_enabled);
+  register_method_documentation<SQLiteDatabase>(
+      "is_updated_enabled",
+      "signature: is_updated_enabled() -> bool\n"
+      "order: 11\n"
+      "Whether or not the signal `updated` is enabled.");
+
   godot::register_method("_to_string", &SQLiteDatabase::get_path);
+
+  godot::register_signal<SQLiteDatabase>(
+      "updated", "type", godot::Variant::Type::INT, "database",
+      godot::Variant::Type::STRING, "table", godot::Variant::Type::STRING,
+      "rowid", godot::Variant::Type::INT);
+  register_signal_documentation<SQLiteDatabase>(
+      "updated",
+      "signature: updated(type: int, database: String, table: String, rowid: "
+      "int)\n"
+      "order: 0\n"
+      "Emitted for every rowid update.\n"
+      "It's disabled by default, call `set_updated(enable: bool)` to enable.\n"
+      "`type` is a constant of SQLite: INSERT, UPDATE or DELETE.");
 }
 
 gdn::sqlite::SQLiteDatabase::SQLiteDatabase()
@@ -198,4 +236,21 @@ godot::String gdn::sqlite::SQLiteDatabase::get_path() const {
   ERR_FAIL_COND_V(is_closed(), "");
 
   return path;
+}
+
+void gdn::sqlite::SQLiteDatabase::set_updated(bool enable) {
+  ERR_FAIL_COND(is_closed());
+
+  if (updated_enabled == enable) return;
+
+  updated_enabled = enable;
+
+  if (updated_enabled)
+    sqlite3_update_hook(connection.get(), update_callback, (void *)this);
+  else
+    sqlite3_update_hook(connection.get(), nullptr, nullptr);
+}
+
+bool gdn::sqlite::SQLiteDatabase::is_updated_enabled() const {
+  return updated_enabled;
 }

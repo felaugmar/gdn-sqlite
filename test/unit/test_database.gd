@@ -100,6 +100,66 @@ func test_get_path() -> void:
   assert_eq(db.get_path(), DB_PATH)
 
 
+func test_signal_updated() -> void:
+  var db := _open_db()
+  
+  assert_false(db.is_updated_enabled())
+  
+  watch_signals(db)
+  
+  var create := 'CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);'
+  var insert := "INSERT INTO test (name) VALUES ('hehe');"
+  var update := "UPDATE test SET name = 'haha' WHERE id = 2;"
+  var delete := "DELETE FROM test WHERE id = 2;"
+  var drop := 'DROP TABLE test;'
+  
+  var err = db.prepare(create).step()
+  assert(err == sqlite.DONE)
+  
+  # `updated` disabled by default
+  err = db.prepare(insert).step()
+  assert(err == sqlite.DONE)
+  
+  assert_signal_not_emitted(db, 'updated')
+  
+  db.set_updated(true)
+  
+  assert_true(db.is_updated_enabled())
+  
+  # `updated` enabled INSERT
+  err = db.prepare(insert).step()
+  assert(err == sqlite.DONE)
+  
+  assert_signal_emitted_with_parameters(db, 'updated', [sqlite.INSERT, 'main', 'test', 2])
+  
+  # `updated` enabled UPDATE  
+  err = db.prepare(update).step()
+  assert(err == sqlite.DONE)
+  
+  assert_signal_emitted_with_parameters(db, 'updated', [sqlite.UPDATE, 'main', 'test', 2])
+  
+  # `updated` enabled DELETE  
+  err = db.prepare(delete).step()
+  assert(err == sqlite.DONE)
+  
+  assert_signal_emitted_with_parameters(db, 'updated', [sqlite.DELETE, 'main', 'test', 2])
+  
+  assert_signal_emit_count(db, 'updated', 3)
+  
+  # `updated` disabled
+  db.set_updated(false)
+  
+  assert_false(db.is_updated_enabled())
+  
+  err = db.prepare(insert).step()
+  assert(err == sqlite.DONE)  
+  
+  assert_signal_emit_count(db, 'updated', 3)
+  
+  err = db.prepare(drop).step()
+  assert(err == sqlite.DONE)  
+
+
 func test_to_string() -> void:
   var db := _open_db()
   

@@ -17,6 +17,8 @@
 #define SPPS_CONSTANT(Const) \
   CONSTANT(Const, "Status Parameters for Prepared Statements")
 
+#define AC_CONSTANT(Const) CONSTANT(Const, "Action Codes")
+
 const gdn::sqlite::ConstantMapping<int32_t> gdn::sqlite::SQLite::constants_int32_t = {
     // Fundamental Datatypes
     FD_CONSTANT(INTEGER),
@@ -142,6 +144,11 @@ const gdn::sqlite::ConstantMapping<int32_t> gdn::sqlite::SQLite::constants_int32
     SPPS_CONSTANT(STMTSTATUS_REPREPARE),
     SPPS_CONSTANT(STMTSTATUS_RUN),
     SPPS_CONSTANT(STMTSTATUS_MEMUSED),
+
+    // Action Codes
+    AC_CONSTANT(INSERT),
+    AC_CONSTANT(UPDATE),
+    AC_CONSTANT(DELETE),
 };
 
 void gdn::sqlite::SQLite::_register_methods() {

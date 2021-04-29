@@ -17,16 +17,17 @@ margin_left = 7.0
 margin_top = 7.0
 margin_right = 1017.0
 margin_bottom = 593.0
+split_offset = 150
 
 [node name="current_version" parent="h_split" instance=ExtResource( 1 )]
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_right = 499.0
+margin_right = 649.0
 margin_bottom = 586.0
 
 [node name="version_updater" parent="h_split" instance=ExtResource( 2 )]
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_left = 511.0
+margin_left = 661.0
 margin_right = 1010.0
 margin_bottom = 586.0
