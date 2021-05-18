@@ -1,5 +1,10 @@
 # GDN-SQLite
 
+# IMPORTANT: Project retirement
+
+This repository was archived in favor of creating a godot module with the same functionality. GDNative proved to be difficult to maintain binaries.
+
+
 ## Getting the plugin
 
 ### From Godot Asset Library
