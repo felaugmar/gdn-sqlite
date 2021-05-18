@@ -4,6 +4,7 @@
 /.github                                      export-ignore
 /.vscode                                      export-ignore
 /addons/gut                                   export-ignore
+/images                                       export-ignore
 /include                                      export-ignore
 /src                                          export-ignore
 /test                                         export-ignore
